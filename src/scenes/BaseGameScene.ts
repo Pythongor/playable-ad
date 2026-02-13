@@ -1,8 +1,34 @@
-import CharacterPart, { availableParts } from "../classes/CharacterPart";
+import CharacterPart, {
+  availableParts,
+  Direction,
+} from "../classes/CharacterPart";
+import GesturesPlugin from "phaser3-rex-plugins/plugins/gestures-plugin";
+import Swipe from "phaser3-rex-plugins/plugins/input/gestures/swipe/Swipe";
+import { Dimension } from "./FinalScene";
+
+interface RexSwipeEvent {
+  lastPointer: Phaser.Input.Pointer;
+  left: boolean;
+  right: boolean;
+  direction: number;
+}
 
 export default class BaseGameScene extends Phaser.Scene {
-  start = false;
-  constructor(name) {
+  rexGestures!: GesturesPlugin;
+  start: boolean = false;
+  facePositions: {
+    start: number | null;
+    end: number | null;
+    parts: { index: number; part: CharacterPart }[];
+  }[];
+  swipesLeft: number;
+  swipeInput?: Swipe;
+  background?: Phaser.GameObjects.Image;
+  wall?: Phaser.GameObjects.Image;
+  bankRobber?: Phaser.GameObjects.Image;
+  scalingCoeff?: number;
+
+  constructor(name?: string | Phaser.Types.Scenes.SettingsConfig) {
     super(name);
     this.facePositions = [];
     this.swipesLeft = 1;
@@ -16,18 +42,21 @@ export default class BaseGameScene extends Phaser.Scene {
 
   addSwipeBehavior() {
     this.swipeInput = this.rexGestures.add
-      .swipe({ velocityThreshold: 1000, dir: "left&right" })
+      .swipe(this, {
+        velocityThreshold: 1000,
+        dir: "left&right",
+      })
       .on("swipe", this.swipeHandler, this);
   }
 
-  swipeHandler({ lastPointer: { downY }, left, right }) {
-    let swipedPart = null;
+  swipeHandler({ lastPointer: { downY }, left, right }: RexSwipeEvent) {
+    let swipedPart: number | null = null;
     this.facePositions.forEach(({ start, end }, index) => {
-      if (downY >= start && downY <= end) swipedPart = index;
+      if (start && end && downY >= start && downY <= end) swipedPart = index;
     });
 
     if (typeof swipedPart === "number") {
-      const direction = right ? "right" : left ? "left" : null;
+      const direction = right ? Direction.Right : left ? Direction.Left : null;
       if (!direction) return;
 
       this.facePositions[swipedPart].parts.forEach(({ part }) => {
@@ -41,19 +70,25 @@ export default class BaseGameScene extends Phaser.Scene {
     }
   }
 
-  reorganizeParts(swipedPart, direction) {
+  reorganizeParts(swipedPart: number | null, direction: Direction) {
+    if (!swipedPart) return;
+
     const { parts } = this.facePositions[swipedPart];
     const width = this.cameras.main.width;
     const centerX = width / 2;
 
-    if (direction === "right") {
+    if (direction === Direction.Right) {
       const last = parts.pop();
-      last.part.setX(centerX + width * (1 - 2.0));
-      parts.unshift(last);
-    } else if (direction === "left") {
+      if (last) {
+        last.part.setX(centerX + width * (1 - 2.0));
+        parts.unshift(last);
+      }
+    } else if (direction === Direction.Left) {
       const first = parts.shift();
-      last.part.setX(centerX + width * (4 - 2.0));
-      parts.push(first);
+      if (first) {
+        first.part.setX(centerX + width * (4 - 2.0));
+        parts.push(first);
+      }
     }
   }
 
@@ -63,7 +98,12 @@ export default class BaseGameScene extends Phaser.Scene {
     this.createBankRobber();
   }
 
-  getScale(image, coeff = 1, cover = true, dimension = null) {
+  getScale(
+    image: Phaser.GameObjects.Image,
+    coeff: number = 1,
+    cover: boolean = true,
+    dimension: Dimension | null = null,
+  ) {
     const scaleX = this.cameras.main.width / image.width;
     const scaleY = this.cameras.main.height / image.height;
 
@@ -81,14 +121,14 @@ export default class BaseGameScene extends Phaser.Scene {
       "lighting",
     );
 
-    const scale = this.getScale(this.background, 1.5, false, "x");
+    const scale = this.getScale(this.background, 1.5, false, Dimension.X);
     this.background.setScale(scale).setScrollFactor(0);
   }
 
   createWall() {
     this.wall = this.add.image(this.cameras.main.width / 2, 0, "wall");
-    this.scale = this.getScale(this.wall, 1.1, false);
-    this.wall.setScale(this.scale).setScrollFactor(0);
+    this.scalingCoeff = this.getScale(this.wall, 1.1, false);
+    this.wall.setScale(this.scalingCoeff).setScrollFactor(0);
     this.wall.setY(
       this.cameras.main.height - (this.wall.height * this.wall.scale) / 3,
     );
@@ -101,13 +141,13 @@ export default class BaseGameScene extends Phaser.Scene {
       "bankrobber",
     );
 
-    this.bankRobber.setScale(this.scale * 0.3).setScrollFactor(0);
+    this.bankRobber.setScale((this.scalingCoeff ?? 1) * 0.3).setScrollFactor(0);
     this.bankRobber.setY(
       (this.bankRobber.height * this.bankRobber.scale) / 1.5,
     );
   }
 
-  shuffle(array) {
+  shuffle<T>(array: Array<T>) {
     let currentIndex = array.length;
     while (currentIndex != 0) {
       const randomIndex = Math.floor(Math.random() * currentIndex);
@@ -121,12 +161,12 @@ export default class BaseGameScene extends Phaser.Scene {
     return array;
   }
 
-  createFacePartStripe(yIndex, xIndex, characterIndex) {
+  createFacePartStripe(yIndex: number, xIndex: number, characterIndex: number) {
     const xPos =
       this.cameras.main.width / 2 + this.cameras.main.width * (xIndex - 2.0);
     const char = new CharacterPart(this, characterIndex, yIndex, xPos, 0);
 
-    char.setScale(this.scale * 0.8);
+    char.setScale((this.scalingCoeff ?? 1) * 0.8);
     char.y =
       this.cameras.main.height - char.height * char.scale * (5 - yIndex + 0.5);
 

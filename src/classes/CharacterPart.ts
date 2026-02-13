@@ -1,7 +1,18 @@
-export const availableParts = [2, 3, 5, 7];
+export const availableParts: Array<number> = [2, 3, 5, 7];
+
+export enum Direction {
+  Right = "right",
+  Left = "left",
+}
 
 export default class CharacterPart extends Phaser.GameObjects.Sprite {
-  constructor(scene, character, part, x, y) {
+  constructor(
+    scene: Phaser.Scene,
+    character: number,
+    part: number,
+    x: number,
+    y: number,
+  ) {
     super(scene, x, y, "characters", `char${character}_0${part}.png`);
     this.init();
   }
@@ -10,12 +21,12 @@ export default class CharacterPart extends Phaser.GameObjects.Sprite {
     this.scene.add.existing(this);
   }
 
-  swipe(direction, onComplete = () => {}) {
+  swipe(direction: Direction, onComplete: () => void = () => {}) {
     if (direction)
       this.scene.tweens.add({
         targets: this,
         x:
-          direction === "right"
+          direction === Direction.Right
             ? this.x + this.scene.cameras.main.width
             : this.x - this.scene.cameras.main.width,
         ease: "Linear",

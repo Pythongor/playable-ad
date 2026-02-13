@@ -9,14 +9,14 @@ export default [
     languageOptions: {
       parser: ts.parser,
       parserOptions: {
-        project: true,
+        project: "./tsconfig.json",
+        tsconfigRootDir: import.meta.dirname,
       },
     },
     rules: {
       "@typescript-eslint/typedef": [
         "error",
         {
-          variableDeclaration: true,
           memberVariableDeclaration: true,
           parameter: true,
           propertyDeclaration: true,

@@ -10,9 +10,15 @@ import playNowBtn from "/assets/images/playNowBtn.png";
 
 import { availableParts } from "../classes/CharacterPart";
 
+type FrameData = {
+  filename: string;
+};
+
 const allowedPrefixes = availableParts.map((id) => `char${id}`);
 
 export default class PreloadScene extends Phaser.Scene {
+  text?: Phaser.GameObjects.Text;
+
   constructor() {
     super("Preload");
   }
@@ -34,7 +40,7 @@ export default class PreloadScene extends Phaser.Scene {
       const filteredData = {
         ...fullData,
         frames: Array.isArray(fullData.frames)
-          ? fullData.frames.filter(
+          ? (fullData.frames as FrameData[]).filter((frame: FrameData) =>
               allowedPrefixes.some((prefix) =>
                 frame.filename.startsWith(prefix),
               ),
@@ -43,7 +49,6 @@ export default class PreloadScene extends Phaser.Scene {
       };
 
       this.textures.addAtlas("characters", sheetImg, filteredData);
-      this.atlasReady = true;
     };
 
     sheetImg.src = charactersBase64;
@@ -59,12 +64,12 @@ export default class PreloadScene extends Phaser.Scene {
   createText() {
     this.text = this.add
       .text(
-        this.sys.game.config.width / 2,
-        this.sys.game.config.height / 2,
+        +this.sys.game.config.width / 2,
+        +this.sys.game.config.height / 2,
         `Loading...`,
         {
           font: "40px",
-          fill: "white",
+          color: "white",
         },
       )
       .setOrigin(0.5, 0.5);

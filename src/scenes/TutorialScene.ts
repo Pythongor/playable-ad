@@ -1,6 +1,15 @@
+import { black } from "../constants";
 import BaseGameScene from "./BaseGameScene";
+import { Dimension } from "./FinalScene";
 
 export default class TutorialScene extends BaseGameScene {
+  gameScale: number = 1;
+  tutorial: boolean;
+  finger?: Phaser.GameObjects.Image;
+  text?: Phaser.GameObjects.Text;
+  button?: Phaser.GameObjects.Sprite;
+  buttonText?: Phaser.GameObjects.Text;
+
   constructor() {
     super("Tutorial");
     this.tutorial = true;
@@ -24,11 +33,13 @@ export default class TutorialScene extends BaseGameScene {
       "bankrobber",
     );
 
-    this.bankRobber.setScale(this.scale * 0.3).setScrollFactor(0);
+    this.gameScale = this.getScale(this.bankRobber, 0.3, false);
+
+    this.bankRobber.setScale(this.gameScale).setScrollFactor(0);
 
     this.tweens.add({
       targets: this.bankRobber,
-      y: (this.bankRobber.height * this.bankRobber.scale) / 1.5,
+      y: (this.bankRobber.height * this.bankRobber.scaleX) / 1.5,
       angle: 0,
       ease: "Back",
       duration: 1000,
@@ -44,13 +55,7 @@ export default class TutorialScene extends BaseGameScene {
 
   addBlur() {
     const rectangle = this.add
-      .rectangle(
-        0,
-        0,
-        this.cameras.main.width,
-        this.cameras.main.height,
-        "black",
-      )
+      .rectangle(0, 0, this.cameras.main.width, this.cameras.main.height, black)
       .setOrigin(0, 0)
       .setAlpha(0);
 
@@ -115,7 +120,8 @@ export default class TutorialScene extends BaseGameScene {
         }),
     });
   }
-  forEachPart(handler) {
+
+  forEachPart(handler: (part: Phaser.GameObjects.Sprite) => void) {
     this.facePositions.forEach(({ parts }) =>
       parts.forEach(({ part }) => handler(part)),
     );
@@ -150,12 +156,12 @@ export default class TutorialScene extends BaseGameScene {
   createText() {
     this.text = this.add
       .text(
-        this.sys.game.config.width / 2,
-        this.sys.game.config.height / 2,
+        +this.sys.game.config.width / 2,
+        +this.sys.game.config.height / 2,
         "Find\nBank robber!",
         {
           font: "40px",
-          fill: "white",
+          color: "white",
           align: "center",
         },
       )
@@ -179,7 +185,7 @@ export default class TutorialScene extends BaseGameScene {
       )
       .setInteractive();
 
-    const scale = this.getScale(this.button, 0.13, true, "y");
+    const scale = this.getScale(this.button, 0.13, true, Dimension.Y);
     this.button.setScale(scale).setScrollFactor(0);
 
     this.buttonText = this.add
@@ -189,7 +195,7 @@ export default class TutorialScene extends BaseGameScene {
         "Next",
         {
           font: "40px bold",
-          fill: "black",
+          color: "black",
           align: "center",
         },
       )
@@ -208,8 +214,8 @@ export default class TutorialScene extends BaseGameScene {
   }
 
   swipeTutorial() {
-    this.button.on("pointerdown", () => {});
-    this.text.setAlpha(0);
+    this.button?.on("pointerdown", () => {});
+    this.text?.setAlpha(0);
 
     this.tweens.add({
       targets: this.bankRobber,
@@ -230,6 +236,10 @@ export default class TutorialScene extends BaseGameScene {
   }
 
   enableSwipe() {
+    if (!this.text) {
+      return;
+    }
+
     this.text.setY(this.cameras.main.height / 4);
     this.text.text = "Swipe to\nchange face";
     this.text.setAlpha(1);
@@ -237,6 +247,10 @@ export default class TutorialScene extends BaseGameScene {
   }
 
   endOfTutorial() {
+    if (!this.text || !this.button || !this.buttonText) {
+      return;
+    }
+
     this.text.text = "You got it!\nLets play!";
     this.buttonText.text = "Play";
     this.button.on("pointerdown", () => this.scene.start("Game"));
@@ -260,9 +274,11 @@ export default class TutorialScene extends BaseGameScene {
       duration: 1000,
     });
 
+    const buttonScale = this.button?.scale || 1;
+
     this.tweens.add({
       targets: [this.button, this.buttonText],
-      scale: this.button.scale * 1.5,
+      scale: buttonScale * 1.5,
       ease: "Back",
       duration: 1000,
       yoyo: true,

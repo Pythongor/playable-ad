@@ -1,3 +1,10 @@
+import { black } from "../constants";
+
+export enum Dimension {
+  X = "x",
+  Y = "y",
+}
+
 export default class FinalScene extends Phaser.Scene {
   constructor() {
     super("Final");
@@ -9,7 +16,12 @@ export default class FinalScene extends Phaser.Scene {
     this.addButton();
   }
 
-  getScale(image, coeff = 1, cover = true, dimension = null) {
+  getScale(
+    image: Phaser.GameObjects.Image | Phaser.GameObjects.Sprite,
+    coeff: number = 1,
+    cover: boolean = true,
+    dimension: Dimension | null = null,
+  ) {
     const scaleX = this.cameras.main.width / image.width;
     const scaleY = this.cameras.main.height / image.height;
 
@@ -52,10 +64,10 @@ export default class FinalScene extends Phaser.Scene {
         "playNowBtn",
       )
       .setInteractive();
-    const scale = this.getScale(button, 0.5, false, "x");
+    const scale = this.getScale(button, 0.5, false, Dimension.X);
 
     button.setScale(scale).setScrollFactor(0);
-    button.on("pointerdown", function (pointer) {
+    button.on("pointerdown", function () {
       window.open("http://google.com/");
     });
 
@@ -80,13 +92,7 @@ export default class FinalScene extends Phaser.Scene {
 
   addBlur() {
     const rectangle = this.add
-      .rectangle(
-        0,
-        0,
-        this.cameras.main.width,
-        this.cameras.main.height,
-        "black",
-      )
+      .rectangle(0, 0, this.cameras.main.width, this.cameras.main.height, black)
       .setOrigin(0, 0)
       .setAlpha(0);
 
