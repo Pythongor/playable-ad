@@ -1,0 +1,30 @@
+{
+  "name": "playable-ad",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "vite build",
+    "watch": "vite build --watch",
+    "dev": "concurrently \"npm run watch\" \"npx vite preview --open\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Pythongor/playable-ad.git"
+  },
+  "keywords": [],
+  "author": "Pythongor",
+  "bugs": {
+    "url": "https://github.com/Pythongor/playable-ad/issues"
+  },
+  "homepage": "https://github.com/Pythongor/playable-ad#readme",
+  "devDependencies": {
+    "concurrently": "^9.2.1",
+    "vite": "^7.3.1",
+    "vite-plugin-singlefile": "^2.3.0"
+  },
+  "dependencies": {
+    "phaser": "^3.90.0",
+    "phaser3-rex-plugins": "^1.80.18"
+  }
+}

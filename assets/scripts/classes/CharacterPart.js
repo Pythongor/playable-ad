@@ -1,7 +1,8 @@
-class CharacterPart extends Phaser.GameObjects.Sprite {
+export const availableParts = [2, 3, 5, 7];
+
+export default class CharacterPart extends Phaser.GameObjects.Sprite {
   constructor(scene, character, part, x, y) {
     super(scene, x, y, "characters", `char${character}_0${part}.png`);
-    console.log();
     this.init();
   }
 

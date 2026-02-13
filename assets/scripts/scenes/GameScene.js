@@ -1,4 +1,6 @@
-class GameScene extends BaseGameScene {
+import BaseGameScene from "./BaseGameScene";
+
+export default class GameScene extends BaseGameScene {
   constructor() {
     super("Game");
     this.swipesLeft = 3;

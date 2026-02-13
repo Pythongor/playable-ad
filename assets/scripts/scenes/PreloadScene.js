@@ -1,33 +1,59 @@
-class PreloadScene extends Phaser.Scene {
+import charactersBase64 from "/assets/images/face-elements/characters.png";
+import charactersJsonRaw from "/assets/images/face-elements/characters.json";
+import lightingImg from "/assets/images/lighting.png";
+import wallImg from "/assets/images/wall.png";
+import bankrobberImg from "/assets/images/bankrobber.png";
+import fingerImg from "/assets/images/tutorial/finger.png";
+import tutorialBtnImg from "/assets/images/tutorial/button.png";
+import icon from "/assets/images/icon.png";
+import playNowBtn from "/assets/images/playNowBtn.png";
+
+import { availableParts } from "../classes/CharacterPart";
+
+const allowedPrefixes = availableParts.map((id) => `char${id}`);
+
+export default class PreloadScene extends Phaser.Scene {
   constructor() {
     super("Preload");
   }
 
   preload() {
-    this.load.multiatlas(
-      "characters",
-      "assets/images/face-elements/characters.json",
-      "assets/images/face-elements/"
-    );
-    this.load.image("lighting", "assets/images/lighting.png");
-    this.load.image("wall", "assets/images/wall.png");
-    this.load.image("bankrobber", "assets/images/bankrobber.png");
-    this.load.image("icon", "assets/images/icon.png");
-    this.load.image("playNowBtn", "assets/images/playNowBtn.png");
-    this.load.image("infinity", "assets/images/tutorial/infinity.png");
-    this.load.image("finger", "assets/images/tutorial/finger.png");
-    this.load.image("tutorialBtn", "assets/images/tutorial/button.png");
-    this.load.scenePlugin({
-      key: "rexgesturesplugin",
-      url: "assets/scripts/libs/rexgesturesplugin.min.js",
-      sceneKey: "rexGestures",
-    });
-    console.log("Preload loaded");
+    this.textures.addBase64("lighting", lightingImg);
+    this.textures.addBase64("wall", wallImg);
+    this.textures.addBase64("bankrobber", bankrobberImg);
+    this.textures.addBase64("finger", fingerImg);
+    this.textures.addBase64("tutorialBtn", tutorialBtnImg);
+    this.textures.addBase64("icon", icon);
+    this.textures.addBase64("playNowBtn", playNowBtn);
+
+    const sheetImg = new Image();
+
+    sheetImg.onload = () => {
+      const fullData = charactersJsonRaw.default || charactersJsonRaw;
+
+      const filteredData = {
+        ...fullData,
+        frames: Array.isArray(fullData.frames)
+          ? fullData.frames.filter(
+              allowedPrefixes.some((prefix) =>
+                frame.filename.startsWith(prefix),
+              ),
+            )
+          : fullData.frames,
+      };
+
+      this.textures.addAtlas("characters", sheetImg, filteredData);
+      this.atlasReady = true;
+    };
+
+    sheetImg.src = charactersBase64;
   }
 
   create() {
     this.createText();
-    this.scene.start("Tutorial");
+    this.time.delayedCall(100, () => {
+      this.scene.start("Tutorial");
+    });
   }
 
   createText() {
@@ -39,7 +65,7 @@ class PreloadScene extends Phaser.Scene {
         {
           font: "40px",
           fill: "white",
-        }
+        },
       )
       .setOrigin(0.5, 0.5);
   }

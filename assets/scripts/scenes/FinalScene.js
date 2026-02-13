@@ -1,4 +1,4 @@
-class FinalScene extends Phaser.Scene {
+export default class FinalScene extends Phaser.Scene {
   constructor() {
     super("Final");
   }
@@ -7,12 +7,12 @@ class FinalScene extends Phaser.Scene {
     this.addBlur();
     this.addIcon();
     this.addButton();
-    console.log("Final loaded");
   }
 
   getScale(image, coeff = 1, cover = true, dimension = null) {
     const scaleX = this.cameras.main.width / image.width;
     const scaleY = this.cameras.main.height / image.height;
+
     if (dimension === "x") {
       return scaleX * coeff;
     } else if (dimension === "y") {
@@ -28,11 +28,13 @@ class FinalScene extends Phaser.Scene {
       .image(
         this.cameras.main.width / 2,
         -(this.cameras.main.height / 6),
-        "icon"
+        "icon",
       )
       .setAngle(45);
+
     const scale = this.getScale(icon, 0.3, false);
     icon.setScale(scale).setScrollFactor(0);
+
     this.tweens.add({
       targets: icon,
       y: this.cameras.main.height / 6,
@@ -47,14 +49,16 @@ class FinalScene extends Phaser.Scene {
       .sprite(
         this.cameras.main.width / 2,
         this.cameras.main.height * 1.2,
-        "playNowBtn"
+        "playNowBtn",
       )
       .setInteractive();
     const scale = this.getScale(button, 0.5, false, "x");
+
     button.setScale(scale).setScrollFactor(0);
     button.on("pointerdown", function (pointer) {
       window.open("http://google.com/");
     });
+
     this.tweens.add({
       targets: button,
       y: this.cameras.main.height / 1.2,
@@ -81,7 +85,7 @@ class FinalScene extends Phaser.Scene {
         0,
         this.cameras.main.width,
         this.cameras.main.height,
-        "black"
+        "black",
       )
       .setOrigin(0, 0)
       .setAlpha(0);

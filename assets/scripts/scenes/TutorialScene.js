@@ -1,4 +1,6 @@
-class TutorialScene extends BaseGameScene {
+import BaseGameScene from "./BaseGameScene";
+
+export default class TutorialScene extends BaseGameScene {
   constructor() {
     super("Tutorial");
     this.tutorial = true;
@@ -19,9 +21,11 @@ class TutorialScene extends BaseGameScene {
     this.bankRobber = this.add.image(
       this.cameras.main.width / 2,
       this.cameras.main.height * -0.2,
-      "bankrobber"
+      "bankrobber",
     );
+
     this.bankRobber.setScale(this.scale * 0.3).setScrollFactor(0);
+
     this.tweens.add({
       targets: this.bankRobber,
       y: (this.bankRobber.height * this.bankRobber.scale) / 1.5,
@@ -45,7 +49,7 @@ class TutorialScene extends BaseGameScene {
         0,
         this.cameras.main.width,
         this.cameras.main.height,
-        "black"
+        "black",
       )
       .setOrigin(0, 0)
       .setAlpha(0);
@@ -63,11 +67,13 @@ class TutorialScene extends BaseGameScene {
       .image(
         this.cameras.main.width / 2,
         -(this.cameras.main.height / 6),
-        "finger"
+        "finger",
       )
       .setAngle(45);
+
     const scale = this.getScale(this.finger, 0.3, false);
     this.finger.setScale(scale).setScrollFactor(0);
+
     this.tweens.add({
       targets: this.finger,
       x: this.finger.width * this.finger.scale,
@@ -111,7 +117,7 @@ class TutorialScene extends BaseGameScene {
   }
   forEachPart(handler) {
     this.facePositions.forEach(({ parts }) =>
-      parts.forEach(({ part }) => handler(part))
+      parts.forEach(({ part }) => handler(part)),
     );
   }
 
@@ -126,7 +132,7 @@ class TutorialScene extends BaseGameScene {
         alpha: 1,
         ease: "Linear",
         duration: 1000,
-      })
+      }),
     );
   }
 
@@ -137,7 +143,7 @@ class TutorialScene extends BaseGameScene {
         alpha: 0,
         ease: "Linear",
         duration: 1000,
-      })
+      }),
     );
   }
 
@@ -151,10 +157,11 @@ class TutorialScene extends BaseGameScene {
           font: "40px",
           fill: "white",
           align: "center",
-        }
+        },
       )
       .setOrigin(0.5, 0.5)
       .setAlpha(0);
+
     this.tweens.add({
       targets: this.text,
       alpha: 1,
@@ -168,9 +175,10 @@ class TutorialScene extends BaseGameScene {
       .sprite(
         this.cameras.main.width / 2,
         this.cameras.main.height * 1.2,
-        "tutorialBtn"
+        "tutorialBtn",
       )
       .setInteractive();
+
     const scale = this.getScale(this.button, 0.13, true, "y");
     this.button.setScale(scale).setScrollFactor(0);
 
@@ -183,11 +191,13 @@ class TutorialScene extends BaseGameScene {
           font: "40px bold",
           fill: "black",
           align: "center",
-        }
+        },
       )
       .setOrigin(0.5, 0.5);
+
     this.buttonText.setScale(scale).setScrollFactor(0);
     this.button.on("pointerdown", () => this.swipeTutorial());
+
     this.tweens.add({
       targets: [this.button, this.buttonText],
       y: this.cameras.main.height * 0.8,
@@ -200,6 +210,7 @@ class TutorialScene extends BaseGameScene {
   swipeTutorial() {
     this.button.on("pointerdown", () => {});
     this.text.setAlpha(0);
+
     this.tweens.add({
       targets: this.bankRobber,
       alpha: 0.3,
@@ -213,6 +224,7 @@ class TutorialScene extends BaseGameScene {
       ease: "Linear",
       duration: 500,
     });
+
     this.addFinger();
     this.showParts();
   }
@@ -228,7 +240,9 @@ class TutorialScene extends BaseGameScene {
     this.text.text = "You got it!\nLets play!";
     this.buttonText.text = "Play";
     this.button.on("pointerdown", () => this.scene.start("Game"));
+
     this.fadeParts();
+
     this.tweens.add({
       targets: this.finger,
       alpha: 0,
@@ -245,6 +259,7 @@ class TutorialScene extends BaseGameScene {
       ease: "Linear",
       duration: 1000,
     });
+
     this.tweens.add({
       targets: [this.button, this.buttonText],
       scale: this.button.scale * 1.5,

@@ -1,17 +1,11 @@
-class BaseGameScene extends Phaser.Scene {
+import CharacterPart, { availableParts } from "../classes/CharacterPart";
+
+export default class BaseGameScene extends Phaser.Scene {
   start = false;
   constructor(name) {
     super(name);
     this.facePositions = [];
     this.swipesLeft = 1;
-  }
-
-  preload() {
-    this.load.scenePlugin({
-      key: "rexgesturesplugin",
-      url: "assets/scripts/libs/rexgesturesplugin.min.js",
-      sceneKey: "rexGestures",
-    });
   }
 
   create() {
@@ -29,13 +23,17 @@ class BaseGameScene extends Phaser.Scene {
   swipeHandler({ lastPointer: { downY }, left, right }) {
     let swipedPart = null;
     this.facePositions.forEach(({ start, end }, index) => {
-      if (start <= downY && end >= downY) swipedPart = index;
+      if (downY >= start && downY <= end) swipedPart = index;
     });
+
     if (typeof swipedPart === "number") {
       const direction = right ? "right" : left ? "left" : null;
-      this.facePositions[swipedPart].parts.forEach(({ part, index }) => {
+      if (!direction) return;
+
+      this.facePositions[swipedPart].parts.forEach(({ part }) => {
         part.swipe(direction);
       });
+
       setTimeout(() => {
         this.reorganizeParts(swipedPart, direction);
         --this.swipesLeft;
@@ -44,15 +42,17 @@ class BaseGameScene extends Phaser.Scene {
   }
 
   reorganizeParts(swipedPart, direction) {
+    const { parts } = this.facePositions[swipedPart];
+    const width = this.cameras.main.width;
+    const centerX = width / 2;
+
     if (direction === "right") {
-      const { parts } = this.facePositions[swipedPart];
       const last = parts.pop();
-      last.part.setX(this.cameras.main.width * -3.5);
+      last.part.setX(centerX + width * (1 - 2.0));
       parts.unshift(last);
     } else if (direction === "left") {
-      const { parts } = this.facePositions[swipedPart];
       const first = parts.shift();
-      first.part.setX(this.cameras.main.width * 2.5);
+      last.part.setX(centerX + width * (4 - 2.0));
       parts.push(first);
     }
   }
@@ -66,22 +66,21 @@ class BaseGameScene extends Phaser.Scene {
   getScale(image, coeff = 1, cover = true, dimension = null) {
     const scaleX = this.cameras.main.width / image.width;
     const scaleY = this.cameras.main.height / image.height;
-    if (dimension === "x") {
-      return scaleX * coeff;
-    } else if (dimension === "y") {
-      return scaleY * coeff;
-    } else {
-      const mathFunc = cover ? Math.max : Math.min;
-      return mathFunc(scaleX, scaleY) * coeff;
-    }
+
+    if (dimension === "x") return scaleX * coeff;
+    if (dimension === "y") return scaleY * coeff;
+
+    const mathFunc = cover ? Math.max : Math.min;
+    return mathFunc(scaleX, scaleY) * coeff;
   }
 
   createLighting() {
     this.background = this.add.image(
       this.cameras.main.width / 2,
       this.cameras.main.height / 2,
-      "lighting"
+      "lighting",
     );
+
     const scale = this.getScale(this.background, 1.5, false, "x");
     this.background.setScale(scale).setScrollFactor(0);
   }
@@ -91,7 +90,7 @@ class BaseGameScene extends Phaser.Scene {
     this.scale = this.getScale(this.wall, 1.1, false);
     this.wall.setScale(this.scale).setScrollFactor(0);
     this.wall.setY(
-      this.cameras.main.height - (this.wall.height * this.wall.scale) / 3
+      this.cameras.main.height - (this.wall.height * this.wall.scale) / 3,
     );
   }
 
@@ -99,11 +98,12 @@ class BaseGameScene extends Phaser.Scene {
     this.bankRobber = this.add.image(
       this.cameras.main.width / 2,
       0,
-      "bankrobber"
+      "bankrobber",
     );
+
     this.bankRobber.setScale(this.scale * 0.3).setScrollFactor(0);
     this.bankRobber.setY(
-      (this.bankRobber.height * this.bankRobber.scale) / 1.5
+      (this.bankRobber.height * this.bankRobber.scale) / 1.5,
     );
   }
 
@@ -117,19 +117,19 @@ class BaseGameScene extends Phaser.Scene {
         array[currentIndex],
       ];
     }
+
     return array;
   }
 
   createFacePartStripe(yIndex, xIndex, characterIndex) {
-    const char = new CharacterPart(
-      this,
-      characterIndex,
-      5 - yIndex,
-      this.cameras.main.width * (xIndex - 4.5),
-      0
-    );
+    const xPos =
+      this.cameras.main.width / 2 + this.cameras.main.width * (xIndex - 2.0);
+    const char = new CharacterPart(this, characterIndex, yIndex, xPos, 0);
+
     char.setScale(this.scale * 0.8);
-    char.y = this.cameras.main.height - char.height * char.scale * yIndex;
+    char.y =
+      this.cameras.main.height - char.height * char.scale * (5 - yIndex + 0.5);
+
     this.facePositions[yIndex - 1].parts.push({
       index: characterIndex,
       part: char,
@@ -137,20 +137,25 @@ class BaseGameScene extends Phaser.Scene {
   }
 
   createParts() {
+    this.facePositions = [];
+
     for (let yIndex = 1; yIndex < 5; yIndex++) {
       this.facePositions.push({ start: null, end: null, parts: [] });
       const currentPosition = this.facePositions[yIndex - 1];
-      const shuffled = this.shuffle([1, 2, 3, 4, 5, 6, 7]);
-      console.log(shuffled);
+      const shuffled = this.shuffle([...availableParts]);
+
       shuffled.forEach((characterIndex, xIndex) =>
-        this.createFacePartStripe(yIndex, xIndex + 1, characterIndex)
+        this.createFacePartStripe(yIndex, xIndex + 1, characterIndex),
       );
-      const { parts } = this.facePositions[yIndex - 1];
-      const { part } = parts[0];
-      const height = part.height * part.scale;
-      currentPosition.start =
-        this.cameras.main.height - height * (yIndex + 0.5);
-      currentPosition.end = this.cameras.main.height - height * (yIndex - 0.5);
+
+      const { parts } = currentPosition;
+
+      if (parts.length > 0) {
+        const { part } = parts[0];
+        const height = part.height * part.scale;
+        currentPosition.start = part.y - height / 2;
+        currentPosition.end = part.y + height / 2;
+      }
     }
   }
 }
